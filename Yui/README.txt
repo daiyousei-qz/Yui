@@ -1,0 +1,1 @@
+Project Yui is a regular expression engine. It primarily supports ONLY ASCII encoding. However, for some multi-byte encoding like UTF-8, it should work as well.

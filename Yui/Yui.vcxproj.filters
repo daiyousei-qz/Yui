@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="External Source">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Non-code">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Project Headers">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Project Source">
+      <UniqueIdentifier>{e24ff37e-c0f5-4540-bd9e-dc63319c19de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Debug">
+      <UniqueIdentifier>{ee6d2668-7c64-41f6-bad5-6f89e33971fe}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="arena.hpp">
+      <Filter>External Source</Filter>
+    </ClInclude>
+    <ClInclude Include="regex-parser.h">
+      <Filter>Project Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="regex-automaton.h">
+      <Filter>Project Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="regex-core.h">
+      <Filter>Project Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="regex-expr.h">
+      <Filter>Project Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="regex-factory.h">
+      <Filter>Project Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="regex-model.h">
+      <Filter>Project Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="flat-set.hpp">
+      <Filter>External Source</Filter>
+    </ClInclude>
+    <ClInclude Include="regex-debug.h">
+      <Filter>Project Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="regex-matcher.h">
+      <Filter>Project Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="README.txt">
+      <Filter>Non-code</Filter>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="regex-automaton.cpp">
+      <Filter>Project Source</Filter>
+    </ClCompile>
+    <ClCompile Include="regex-expr.cpp">
+      <Filter>Project Source</Filter>
+    </ClCompile>
+    <ClCompile Include="regex-parser.cpp">
+      <Filter>Project Source</Filter>
+    </ClCompile>
+    <ClCompile Include="regex-factory.cpp">
+      <Filter>Project Source</Filter>
+    </ClCompile>
+    <ClCompile Include="regex-debug.cpp">
+      <Filter>Project Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Source.cpp">
+      <Filter>Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="regex-matcher.cpp">
+      <Filter>Project Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
