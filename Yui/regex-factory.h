@@ -8,47 +8,47 @@
 
 namespace yui
 {
-	// Inherits this class to create a customized factory
-	// for a specific regular expression model
-	// You may use ParseRegex instead
-	class RegexFactoryBase
-	{
-	public:
-		RegexFactoryBase(); // TODO: provides options
+    // Inherits this class to create a customized factory
+    // for a specific regular expression model
+    // You may use ParseRegex instead
+    class RegexFactoryBase
+    {
+    public:
+        RegexFactoryBase(); // TODO: provides options
 
-		// Call this function to build a new ManagedRegex instance
-		ManagedRegex::Ptr Generate();
+        // Call this function to build a new ManagedRegex instance
+        ManagedRegex::Ptr Generate();
 
-	protected:
-		// Character Construction
-		//
-		RegexExpr* Range(CharRange rg);
-		RegexExpr* Char(int ch);
-		RegexExpr* String(const char* s);
+    protected:
+        // Character Construction
+        //
+        RegexExpr* Range(CharRange rg);
+        RegexExpr* Char(int ch);
+        RegexExpr* String(const char* s);
 
-		// Compound Construction
-		//
-		RegexExpr* Concat(const RegexExprVec& seq);
-		RegexExpr* Alter(const RegexExprVec& any);
+        // Compound Construction
+        //
+        RegexExpr* Concat(const RegexExprVec& seq);
+        RegexExpr* Alter(const RegexExprVec& any);
 
-		// Repetition Construction
-		//
-		RegexExpr* Repeat(RegexExpr* expr, Repetition rep, ClosureStrategy strategy);
+        // Repetition Construction
+        //
+        RegexExpr* Repeat(RegexExpr* expr, Repetition rep, ClosureStrategy strategy);
 
-		RegexExpr* Optional(RegexExpr* expr);
-		RegexExpr* Star(RegexExpr* expr);
-		RegexExpr* Plus(RegexExpr* expr);
+        RegexExpr* Optional(RegexExpr* expr);
+        RegexExpr* Star(RegexExpr* expr);
+        RegexExpr* Plus(RegexExpr* expr);
 
-		// Fancy Construction
-		//
-		RegexExpr* Anchor(AnchorType type);
-		RegexExpr* Capture(RegexExpr* expr);
+        // Fancy Construction
+        //
+        RegexExpr* Anchor(AnchorType type);
+        RegexExpr* Capture(RegexExpr* expr);
 
-		// User-defined Construction Function
-		// Override this to control the construction process
-		virtual RegexExpr* Construct() = 0;
+        // User-defined Construction Function
+        // Override this to control the construction process
+        virtual RegexExpr* Construct() = 0;
 
-	private:
-		Arena arena_;
-	};
+    private:
+        Arena arena_;
+    };
 }

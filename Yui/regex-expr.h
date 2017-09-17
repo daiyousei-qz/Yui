@@ -7,154 +7,154 @@
 
 namespace yui
 {
-	struct NfaBranch;
-	class NfaBuilder;
+    struct NfaBranch;
+    class NfaBuilder;
 
-	// TODO: use Visitor pattern
-	class RegexExpr
-	{
-	public:
-		RegexExpr() = default;
-		virtual ~RegexExpr() = default;
+    // TODO: use Visitor pattern
+    class RegexExpr
+    {
+    public:
+        RegexExpr() = default;
+        virtual ~RegexExpr() = default;
 
-		// if this expression can be translated into Dfa
-		virtual bool IsDfaCompatible() = 0;
-		// if an expression can be content of an assertion
-		virtual bool IsAssertionCompatible() = 0;
+        // if this expression can be translated into Dfa
+        virtual bool IsDfaCompatible() = 0;
+        // if an expression can be content of an assertion
+        virtual bool IsAssertionCompatible() = 0;
 
-		// DEBUG
-		virtual void Print(size_t ident) = 0;
+        // DEBUG
+        virtual void Print(size_t ident) = 0;
 
-		// build a path between of such expression between two states given
-		virtual void ConnectNfa(NfaBuilder& builder, NfaBranch which) = 0;
-	};
+        // build a path between of such expression between two states given
+        virtual void ConnectNfa(NfaBuilder& builder, NfaBranch which) = 0;
+    };
 
-	using RegexExprVec = std::vector<RegexExpr*>;
+    using RegexExprVec = std::vector<RegexExpr*>;
 
-	// Expression Model
-	//
+    // Expression Model
+    //
 
-	template <bool DfaCompatible, bool AssertionCompatible>
-	class RegexExprBase : public RegexExpr
-	{
-	public:
-		RegexExprBase() = default;
+    template <bool DfaCompatible, bool AssertionCompatible>
+    class RegexExprBase : public RegexExpr
+    {
+    public:
+        RegexExprBase() = default;
 
-		bool IsDfaCompatible() override { return DfaCompatible; }
-		bool IsAssertionCompatible() override { return AssertionCompatible; }
-	};
+        bool IsDfaCompatible() override { return DfaCompatible; }
+        bool IsAssertionCompatible() override { return AssertionCompatible; }
+    };
 
-	class EntityExpr : public RegexExprBase<true, true>
-	{
-	public:
-		EntityExpr(CharRange rg)
-			: range_(rg) { }
+    class EntityExpr : public RegexExprBase<true, true>
+    {
+    public:
+        EntityExpr(CharRange rg)
+            : range_(rg) { }
 
-		auto Range() const { return range_; }
+        auto Range() const { return range_; }
 
-		void Print(size_t ident) override;
-		void ConnectNfa(NfaBuilder& builder, NfaBranch which) override;
+        void Print(size_t ident) override;
+        void ConnectNfa(NfaBuilder& builder, NfaBranch which) override;
 
-	private:
-		CharRange range_;
-	};
+    private:
+        CharRange range_;
+    };
 
-	class ConcatenationExpr : public RegexExprBase<true, true>
-	{
-	public:
-		ConcatenationExpr(const RegexExprVec& seq)
-			: seq_(seq) { }
+    class ConcatenationExpr : public RegexExprBase<true, true>
+    {
+    public:
+        ConcatenationExpr(const RegexExprVec& seq)
+            : seq_(seq) { }
 
-		const auto& Children() { return seq_; }
+        const auto& Children() { return seq_; }
 
-		void Print(size_t ident) override;
-		void ConnectNfa(NfaBuilder& builder, NfaBranch which) override;
+        void Print(size_t ident) override;
+        void ConnectNfa(NfaBuilder& builder, NfaBranch which) override;
 
-	private:
-		RegexExprVec seq_;
-	};
+    private:
+        RegexExprVec seq_;
+    };
 
-	class AlternationExpr : public RegexExprBase<true, true>
-	{
-	public:
-		AlternationExpr(const RegexExprVec& any)
-			: any_(any) { }
+    class AlternationExpr : public RegexExprBase<true, true>
+    {
+    public:
+        AlternationExpr(const RegexExprVec& any)
+            : any_(any) { }
 
-		const auto& Children() { return any_; }
+        const auto& Children() { return any_; }
 
-		void Print(size_t ident) override;
-		void ConnectNfa(NfaBuilder& builder, NfaBranch which) override;
+        void Print(size_t ident) override;
+        void ConnectNfa(NfaBuilder& builder, NfaBranch which) override;
 
-	private:
-		RegexExprVec any_;
-	};
+    private:
+        RegexExprVec any_;
+    };
 
-	class RepetitionExpr : public RegexExpr
-	{
-	public:
-		RepetitionExpr(RegexExpr* child, Repetition rep, ClosureStrategy strategy)
-			: child_(child), rep_(rep), strategy_(strategy) { }
+    class RepetitionExpr : public RegexExpr
+    {
+    public:
+        RepetitionExpr(RegexExpr* child, Repetition rep, ClosureStrategy strategy)
+            : child_(child), rep_(rep), strategy_(strategy) { }
 
-		auto Child() const { return child_; }
-		auto Strategy() const { return strategy_; }
-		auto Count() const { return rep_; }
+        auto Child() const { return child_; }
+        auto Strategy() const { return strategy_; }
+        auto Count() const { return rep_; }
 
-		bool IsDfaCompatible() override { return strategy_ == ClosureStrategy::Greedy; }
-		bool IsAssertionCompatible() override { return true; }
+        bool IsDfaCompatible() override { return strategy_ == ClosureStrategy::Greedy; }
+        bool IsAssertionCompatible() override { return true; }
 
-		void Print(size_t ident) override;
-		void ConnectNfa(NfaBuilder& builder, NfaBranch which) override;
+        void Print(size_t ident) override;
+        void ConnectNfa(NfaBuilder& builder, NfaBranch which) override;
 
-	public:
-		RegexExpr* child_;
-		
-		Repetition rep_;
-		ClosureStrategy strategy_;
-	};
+    public:
+        RegexExpr* child_;
+        
+        Repetition rep_;
+        ClosureStrategy strategy_;
+    };
 
-	class AnchorExpr : public RegexExprBase<false, true>
-	{
-	public:
-		AnchorExpr(AnchorType def)
-			: type_(def) { }
+    class AnchorExpr : public RegexExprBase<false, true>
+    {
+    public:
+        AnchorExpr(AnchorType def)
+            : type_(def) { }
 
-		auto Type() const { return type_; }
+        auto Type() const { return type_; }
 
-		void Print(size_t ident) override;
-		void ConnectNfa(NfaBuilder& builder, NfaBranch which) override;
+        void Print(size_t ident) override;
+        void ConnectNfa(NfaBuilder& builder, NfaBranch which) override;
 
-	private:
-		AnchorType type_;
-	};
+    private:
+        AnchorType type_;
+    };
 
-	class CaptureExpr : public RegexExprBase<false, false>
-	{
-	public:
-		CaptureExpr(unsigned id, RegexExpr* expr)
-			: id_(id) { }
+    class CaptureExpr : public RegexExprBase<false, false>
+    {
+    public:
+        CaptureExpr(unsigned id, RegexExpr* expr)
+            : id_(id) { }
 
-		auto Id() const { return id_; }
+        auto Id() const { return id_; }
 
-		void Print(size_t ident) override;
-		void ConnectNfa(NfaBuilder& builder, NfaBranch which) override;
+        void Print(size_t ident) override;
+        void ConnectNfa(NfaBuilder& builder, NfaBranch which) override;
 
-	private:
-		unsigned id_;
-		RegexExpr* expr_;
-	};
+    private:
+        unsigned id_;
+        RegexExpr* expr_;
+    };
 
-	class ReferenceExpr : public RegexExprBase<false, false>
-	{
-	public:
-		ReferenceExpr(unsigned id)
-			: id_(id) { }
+    class ReferenceExpr : public RegexExprBase<false, false>
+    {
+    public:
+        ReferenceExpr(unsigned id)
+            : id_(id) { }
 
-		auto Id() const { return id_; }
+        auto Id() const { return id_; }
 
-		void Print(size_t ident) override;
-		void ConnectNfa(NfaBuilder& builder, NfaBranch which) override;
+        void Print(size_t ident) override;
+        void ConnectNfa(NfaBuilder& builder, NfaBranch which) override;
 
-	private:
-		unsigned id_;
-	};
+    private:
+        unsigned id_;
+    };
 }

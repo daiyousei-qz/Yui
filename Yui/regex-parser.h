@@ -6,6 +6,6 @@
 
 namespace yui
 {
-	// internal machanics should be an explicit automaton
-	ManagedRegex::Ptr Parse(const std::string& regex);
+    // internal machanics should be an explicit automaton
+    ManagedRegex::Ptr Parse(const std::string& regex);
 }
