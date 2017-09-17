@@ -2,8 +2,10 @@
 
 #pragma once
 #include "regex-core.h"
+#include "arena.hpp"
 #include <cassert>
 #include <vector>
+#include <memory>
 
 namespace yui
 {
@@ -17,7 +19,9 @@ namespace yui
         RegexExpr() = default;
         virtual ~RegexExpr() = default;
 
-        // if this expression can be translated into Dfa
+        // TODO: remove these two functions as NfaBuilder
+        //       would know it on NFA construction anyway
+        // if this expression can be translated into DFA
         virtual bool IsDfaCompatible() = 0;
         // if an expression can be content of an assertion
         virtual bool IsAssertionCompatible() = 0;
@@ -30,6 +34,27 @@ namespace yui
     };
 
     using RegexExprVec = std::vector<RegexExpr*>;
+
+    // A ManagedRegex instance owns and manages memory resources required
+    // to present a regex model, which are a set of RegexExpr instances via RAII
+    // NOTE: This class should only be constructed by RegexFactoryBase
+    class ManagedRegex
+    {
+    public:
+        using Ptr = std::unique_ptr<ManagedRegex>;
+
+        ManagedRegex(Arena arena, RegexExpr* root)
+            : arena_(std::move(arena)), root_(root)
+        {
+            assert(root != nullptr);
+        }
+
+        RegexExpr* Expr() const { return root_; }
+
+    private:
+        Arena arena_;
+        RegexExpr* root_;
+    };
 
     // Expression Model
     //

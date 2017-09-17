@@ -1,5 +1,6 @@
 #include "regex-matcher.h"
 #include "regex-automaton.h"
+#include <deque>
 
 using namespace std;
 
@@ -117,7 +118,7 @@ namespace yui
     protected:
         RegexMatchOpt SerachInternal(string_view view, bool allow_substr) const override
         {
-
+            throw 0;
         }
 
     private:
@@ -127,8 +128,16 @@ namespace yui
     // Matcher Factory
     //
 
-    RegexMatcher::Ptr CreateDfaMatcher(DfaAutomaton atm)
+    RegexMatcher::Ptr CreateDfaMatcher(DfaAutomaton dfa)
     {
-        return make_unique<DfaRegexMatcher>(std::move(atm));
+        return make_unique<DfaRegexMatcher>(std::move(dfa));
+    }
+
+    RegexMatcher::Ptr CreateNfaMatcher(NfaAutomaton nfa)
+    {
+        // automata to simulate should have no epsilon edges for the sake of performance
+        assert(!nfa.HasEpsilon());
+
+        return make_unique<NfaRegexMatcher>(std::move(nfa));
     }
 }

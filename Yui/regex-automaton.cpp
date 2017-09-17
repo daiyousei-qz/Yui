@@ -11,7 +11,7 @@ namespace yui
     // Implementation of NfaBuilder
     //
 
-    NfaState* NfaBuilder::NewState(bool is_final = false)
+    NfaState* NfaBuilder::NewState(bool is_final)
     {
         NfaState* result = arena_.Construct<NfaState>();
         result->is_final = is_final;
@@ -19,7 +19,7 @@ namespace yui
         return result;
     }
 
-    NfaBranch NfaBuilder::NewBranch(bool is_final = false)
+    NfaBranch NfaBuilder::NewBranch(bool is_final)
     {
         NfaBranch result;
         result.begin = NewState(false);
@@ -158,7 +158,8 @@ namespace yui
 
         if (accepting)
         {
-            jumptable_[id * kDfaJumptableWidth + kAcceptingIndicatorOffset] = kInvalidDfaState + 1;
+            // TODO: name the magic number 0
+            jumptable_[id * kDfaJumptableWidth + kAcceptingIndicatorOffset] = 0;
         }
 
         return id;
@@ -419,7 +420,7 @@ namespace yui
         NfaEvaluationResult eval = EvaluateNfa(atm);
         DfaBuilder builder{};
 
-        using NfaStateSet = std::set<const NfaState*>; // TODO: use FlatSet instead
+        using NfaStateSet = FlatSet<const NfaState*>; // TODO: use FlatSet instead
         std::map<NfaStateSet, DfaState> id_map; // maps a set of NFA states to a DFA state
         std::queue<NfaStateSet> waitlist;
 

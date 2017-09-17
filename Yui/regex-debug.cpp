@@ -6,6 +6,30 @@ using namespace std;
 
 namespace yui
 {
+    void PrintIdent(size_t ident)
+    {
+        for (size_t i = 0; i < ident; ++i)
+            putchar(' ');
+    }
+
+    std::string ToString(EpsilonPriority priority)
+    {
+        switch (priority)
+        {
+        case EpsilonPriority::Low:
+            return "Low";
+        case EpsilonPriority::Normal:
+            return "Normal";
+        case EpsilonPriority::High:
+            return "High";
+        }
+    }
+
+    std::string ToString(AnchorType anchor)
+    {
+        return anchor == AnchorType::Dollar ? "$" : "^";
+    }
+
     void PrintNfa(const NfaAutomaton& atm)
     {
         int next_id = 0;

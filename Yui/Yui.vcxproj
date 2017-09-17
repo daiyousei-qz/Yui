@@ -120,7 +120,6 @@
     <ClInclude Include="regex-expr.h" />
     <ClInclude Include="regex-factory.h" />
     <ClInclude Include="regex-matcher.h" />
-    <ClInclude Include="regex-model.h" />
     <ClInclude Include="regex-parser.h" />
   </ItemGroup>
   <ItemGroup>

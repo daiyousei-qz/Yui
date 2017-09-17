@@ -1,7 +1,7 @@
 // Provides with text-to-regex construction function
 
 #pragma once
-#include "regex-model.h"
+#include "regex-expr.h"
 #include <string>
 
 namespace yui

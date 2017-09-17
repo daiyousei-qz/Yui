@@ -190,7 +190,7 @@ namespace yui
     void AnchorExpr::Print(size_t ident)
     {
         PrintIdent(ident);
-        printf("AnchorExpr{%s}\n", ToString(type_));
+        printf("AnchorExpr{%s}\n", ToString(type_).c_str());
     }
 
     void CaptureExpr::Print(size_t ident)

@@ -16,13 +16,14 @@ namespace yui
     using RegexMatchOpt = std::optional<RegexMatch>;
     using RegexMatchVec = std::vector<RegexMatch>;
 
-    class RegexMatcher
+    class RegexMatcher : Uncopyable, Unmovable
     {
     public:
         using Ptr = std::unique_ptr<RegexMatcher>;
 
     public:
         RegexMatcher() = default;
+        virtual ~RegexMatcher() = default;
 
         bool Match(std::string_view s) const;
 
@@ -35,5 +36,6 @@ namespace yui
         virtual RegexMatchOpt SerachInternal(std::string_view view, bool allow_substr) const = 0;
     };
 
-    RegexMatcher::Ptr CreateDfaMatcher(DfaAutomaton atm);
+    RegexMatcher::Ptr CreateDfaMatcher(DfaAutomaton dfa);
+    RegexMatcher::Ptr CreateNfaMatcher(NfaAutomaton nfa);
 }

@@ -39,9 +39,6 @@
     <ClInclude Include="regex-factory.h">
       <Filter>Project Headers</Filter>
     </ClInclude>
-    <ClInclude Include="regex-model.h">
-      <Filter>Project Headers</Filter>
-    </ClInclude>
     <ClInclude Include="flat-set.hpp">
       <Filter>External Source</Filter>
     </ClInclude>

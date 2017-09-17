@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <variant>
+#include <functional>
 
 namespace yui
 {
@@ -57,8 +58,8 @@ namespace yui
 
     struct NfaBranch
     {
-        NfaState *begin;
-        NfaState *end;
+        NfaState* begin;
+        NfaState* end;
     };
 
     // This class should only be constructed via a NfaBuilder
@@ -76,6 +77,11 @@ namespace yui
         bool DfaCompatible() const
         {
             return dfa_compatible_;
+        }
+
+        bool HasEpsilon() const
+        {
+            return has_epsilon_;
         }
 
         const NfaState* IntialState() const
@@ -233,7 +239,7 @@ namespace yui
         std::unordered_multimap<const NfaState*, const NfaTransition*> outbounds;
     };
 
-    void EnumerateNfa(const NfaState* initial, function<void(const NfaState*)> callback);
+    void EnumerateNfa(const NfaState* initial, std::function<void(const NfaState*)> callback);
     NfaEvaluationResult EvaluateNfa(const NfaAutomaton& atm);
 
     NfaAutomaton EliminateEpsilon(const NfaAutomaton &atm);

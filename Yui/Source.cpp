@@ -60,5 +60,8 @@ int main()
     auto r5 = dfa_matcher->Search("ggababa233");
     auto r6 = dfa_matcher->SearchAll("a233a;iogjb233iia6bb233");
 
+    printf("==== NFA Matcher Test ===========================\n");
+    // auto nfa_matcher = CreateNfaMatcher(nfa);
+
     system("pause");
 }

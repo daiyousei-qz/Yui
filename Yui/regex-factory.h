@@ -3,7 +3,6 @@
 // or use a builtin text parser that use RegexFactoryBase internally
 
 #pragma once
-#include "regex-model.h"
 #include "regex-expr.h"
 
 namespace yui

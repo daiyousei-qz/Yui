@@ -13,12 +13,23 @@
 
 namespace yui
 {
-// TODO: fix this
-/*
+    // is_iterator
+    //
+
+    // test via if category_tag could be found
+    template <typename T, typename = void>
+    struct is_iterator : public std::false_type { };
+    template <typename T>
+    struct is_iterator<T, std::void_t<typename std::iterator_traits<T>::iterator_category>>
+        : public std::true_type { };
+
+    // FlatSet
+    //
+
     template <typename Key,
-        typename Compare = std::less<Key>,
-        typename Allocator = std::allocator<Key>>
-        class FlatSet
+              typename Compare = std::less<Key>,
+              typename Allocator = std::allocator<Key>>
+    class FlatSet
     {
         static_assert(std::is_move_constructible<Key>::value, "T in CompactSet<T> must be move constructible");
 
@@ -206,7 +217,7 @@ namespace yui
             insert(ilist.begin(), ilist.end());
         }
 
-        void erase(const Key &x)
+        void erase(const Key& x)
         {
             auto where = find(x);
             if (where != container_.end())
@@ -215,7 +226,7 @@ namespace yui
             }
         }
 
-        void swap(compact_set& other)
+        void swap(FlatSet& other)
         {
             container_.swap(other.container_);
         }
@@ -311,6 +322,4 @@ namespace yui
     {
         return !operator<(lhs, rhs);
     }
-
-//*/
 }
