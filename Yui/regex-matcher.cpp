@@ -1,6 +1,8 @@
 #include "regex-matcher.h"
 #include "regex-automaton.h"
 #include <deque>
+#include <algorithm>
+#include <iterator>
 
 using namespace std;
 
@@ -116,10 +118,70 @@ namespace yui
             : nfa_(std::move(atm)) { }
 
     protected:
+		// things with larger index are prior
+		void ExpandRoutes(deque<pair<int, NfaTransition*>>& output, const NfaState* state, int index, int ch) const
+		{
+			for (auto it = state->exits.rbegin(); it != state->exits.rend(); ++it)
+			{
+				auto edge = *it;
+
+				switch (edge->type)
+				{
+				case TransitionType::Entity:
+					if (get<CharRange>(edge->data).Contain(ch))
+					{
+						output.emplace_back(index+1, edge);
+					}
+					break;
+
+				case TransitionType::Epsilon:
+					throw 0; // not suppose to happen
+				default:
+					// for non-character-consuming edge
+					// output.emplace_back(index, edge);
+					throw 0; // not implemented
+				}
+			}
+		}
+
         RegexMatchOpt SerachInternal(string_view view, bool allow_substr) const override
         {
-            throw 0;
-        }
+			assert(!view.empty());
+
+			// TODO: add minimum-length optimization
+			for (auto index = 0; index < view.length(); ++index)
+			{
+				deque<pair<int, NfaTransition*>> routes;
+
+				// initialize routes
+				ExpandRoutes(routes, nfa_.IntialState(), index, view[index]);
+
+				// TODO: add capturing and reference
+				// iterates and backtracks
+				while (!routes.empty())
+				{
+					auto[target_index, last_edge] = routes.back();
+					routes.pop_back();
+
+					// TODO: fix non-greedy behavior
+					// record possible match
+					if (last_edge->target->is_final)
+					{
+						return CreateRegexMatch(view.substr(index, target_index - index));
+					}
+
+					// lookup possible new routes
+					ExpandRoutes(routes, last_edge->target, target_index, view[target_index]);
+				}
+
+				if (!allow_substr)
+				{
+					break;
+				}
+			}
+
+			return nullopt;
+		}
 
     private:
         NfaAutomaton nfa_;

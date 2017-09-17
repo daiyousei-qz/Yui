@@ -52,16 +52,13 @@ int main()
     printf("\n\n");
 
     printf("==== DFA Matcher Test ===========================\n");
-    auto dfa_matcher = CreateDfaMatcher(dfa);
-    auto r1 = dfa_matcher->Match("aaa233");
-    auto r2 = dfa_matcher->Match("aaa2334");
-    auto r3 = dfa_matcher->Match("ababa233");
-    auto r4 = dfa_matcher->Match("ggababa233");
-    auto r5 = dfa_matcher->Search("ggababa233");
-    auto r6 = dfa_matcher->SearchAll("a233a;iogjb233iia6bb233");
-
-    printf("==== NFA Matcher Test ===========================\n");
-    // auto nfa_matcher = CreateNfaMatcher(nfa);
+    auto nfa_matcher = CreateNfaMatcher(std::move(nfa));
+    auto r1 = nfa_matcher->Match("aaa233");
+    auto r2 = nfa_matcher->Match("aaa2334");
+    auto r3 = nfa_matcher->Match("ababa233");
+    auto r4 = nfa_matcher->Match("ggababa233");
+    auto r5 = nfa_matcher->Search("ggababa233");
+	auto r6 = nfa_matcher->SearchAll("a233a;iogjb233iia6bb233");
 
     system("pause");
 }

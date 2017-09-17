@@ -123,9 +123,6 @@
     <ClInclude Include="regex-parser.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="README.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="regex-automaton.cpp" />
     <ClCompile Include="regex-debug.cpp" />
     <ClCompile Include="regex-expr.cpp" />
