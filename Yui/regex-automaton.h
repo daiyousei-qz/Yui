@@ -27,7 +27,7 @@ namespace yui
         Capture,    // begin capture
         Reference,  // backreference
         Assertion,  // begin custom zero-width assertion
-        Finish,     // end mark for Capture, Reference and Assertion group
+        FinishCapture,     // end mark for Capture and Assertion group
     };
 
     struct NfaTransition

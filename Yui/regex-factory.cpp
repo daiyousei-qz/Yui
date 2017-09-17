@@ -72,4 +72,10 @@ namespace yui
     {
         return arena_.Construct<AnchorExpr>(type);
     }
+
+	RegexExpr* RegexFactoryBase::Capture(RegexExpr* expr)
+	{
+		// TODO: support multiple captures
+		return arena_.Construct<CaptureExpr>(0, expr);
+	}
 }

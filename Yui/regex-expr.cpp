@@ -63,6 +63,7 @@ namespace yui
         }
     }
 
+	// TODO: optimize for [1, ...]
     void RepetitionExpr::ConnectNfa(NfaBuilder& builder, NfaBranch which)
     {
         // evaluate child expression of repetition
@@ -141,7 +142,7 @@ namespace yui
         expr_->ConnectNfa(builder, inner_branch);
 
         builder.NewCaptureTransition(NfaBranch{ which.begin, inner_branch.begin }, id_);
-        builder.NewFinishTransition(NfaBranch{ inner_branch.end, which.begin });
+        builder.NewFinishTransition(NfaBranch{ inner_branch.end, which.end });
     }
 
     void ReferenceExpr::ConnectNfa(NfaBuilder& builder, NfaBranch which)
@@ -155,7 +156,7 @@ namespace yui
     void EntityExpr::Print(size_t ident)
     {
         PrintIdent(ident);
-        printf("EntityExpr{ %d-%d }\n", range_.Min(), range_.Max());
+        printf("EntityExpr{ %c-%c }\n", range_.Min(), range_.Max());
     }
 
     void ConcatenationExpr::Print(size_t ident)

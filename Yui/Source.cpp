@@ -12,10 +12,16 @@ protected:
     {
         return Concat({
             Plus(
-                Alter({ Char('a'), Char('b') })
+				Alter({ Range({'a', 'z'}), Range({'A', 'Z'}) })
             ),
 
-            String("233"),
+			Capture(
+				Star(
+					Range({'0', '9'})
+				)
+			),
+
+            String(";"),
         });
     }
 };
@@ -45,20 +51,29 @@ int main()
     auto nfa = EliminateEpsilon(nfa_e);
     PrintNfa(nfa);
 
+	printf("\n\n");
+
     printf("==== DFA Construction ===========================\n");
-    auto dfa = GenerateDfa(nfa_e);
-    PrintDfa(dfa);
+	if (nfa_e.DfaCompatible())
+	{
+		auto dfa = GenerateDfa(nfa_e);
+		PrintDfa(dfa);
+	}
+	else
+	{
+		printf("this automaton is not compatible with DFA\n");
+	}
 
     printf("\n\n");
 
     printf("==== DFA Matcher Test ===========================\n");
     auto nfa_matcher = CreateNfaMatcher(std::move(nfa));
-    auto r1 = nfa_matcher->Match("aaa233");
-    auto r2 = nfa_matcher->Match("aaa2334");
+    auto r1 = nfa_matcher->Match("aaa233;");
+    auto r2 = nfa_matcher->Match("aaa2");
     auto r3 = nfa_matcher->Match("ababa233");
     auto r4 = nfa_matcher->Match("ggababa233");
     auto r5 = nfa_matcher->Search("ggababa233");
-	auto r6 = nfa_matcher->SearchAll("a233a;iogjb233iia6bb233");
+	auto r6 = nfa_matcher->SearchAll("a233;iogjb233iia6bb233");
 
     system("pause");
 }

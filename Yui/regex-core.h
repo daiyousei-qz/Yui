@@ -15,8 +15,8 @@ namespace yui
 
     enum class AnchorType
     {
-        Circumflex,
-        Dollar,
+        LineStart,
+        LineBreak,
     };
 
     enum class AssertionType

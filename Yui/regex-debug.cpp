@@ -27,7 +27,7 @@ namespace yui
 
     std::string ToString(AnchorType anchor)
     {
-        return anchor == AnchorType::Dollar ? "$" : "^";
+        return anchor == AnchorType::LineBreak ? "$" : "^";
     }
 
     void PrintNfa(const NfaAutomaton& atm)
@@ -107,7 +107,7 @@ namespace yui
                         printf("\n");
                     }
                     break;
-                case TransitionType::Finish:
+                case TransitionType::FinishCapture:
                     printf("(finish)");
                     break;
                 }

@@ -180,12 +180,12 @@ namespace yui
             iterator lb = lower_bound(value);
             if (lb != container_.end() && *lb == value)
             {
-                return std::pair<iterator, bool>{lb, false};
+				return std::make_pair(lb, false);
             }
             else
             {
                 iterator where = container_.emplace(lb, std::forward<TArgs>(args)...);
-                return std::pair<iterator, bool>{where, true};
+				return std::make_pair(lb, false);
             }
         }
         std::pair<iterator, bool> insert(const value_type& value)

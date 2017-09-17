@@ -69,7 +69,7 @@ namespace yui
     }
     NfaTransition* NfaBuilder::NewFinishTransition(NfaBranch branch)
     {
-        return ConstructTransition(branch.begin, branch.end, TransitionType::Finish);
+        return ConstructTransition(branch.begin, branch.end, TransitionType::FinishCapture);
     }
 
     NfaTransition* NfaBuilder::CloneTransition(NfaBranch branch, const NfaTransition *transition)
@@ -126,7 +126,7 @@ namespace yui
             case TransitionType::Capture:
             case TransitionType::Reference:
             case TransitionType::Assertion:
-            case TransitionType::Finish:
+            case TransitionType::FinishCapture:
                 dfa_compatible_ = false;
                 break;
             }

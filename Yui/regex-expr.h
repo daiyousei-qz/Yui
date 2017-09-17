@@ -156,7 +156,7 @@ namespace yui
     {
     public:
         CaptureExpr(unsigned id, RegexExpr* expr)
-            : id_(id) { }
+            : id_(id), expr_(expr) { }
 
         auto Id() const { return id_; }
 
