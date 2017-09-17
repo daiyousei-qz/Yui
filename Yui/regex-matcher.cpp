@@ -124,24 +124,18 @@ namespace yui
 		// ones that have largest index are similated first
 		using NfaSimulationContext = deque<pair<int, NfaTransition*>>;
 
-		enum class GroupFlag
-		{
-			Capture,
-			Assertion
-		};
-
 		struct SimulationContext
 		{
-			deque<pair<int, NfaTransition*>> routes;
-			vector<pair<int, int>> captures;
-			stack<pair<int, GroupFlag>> groups;
+			deque<pair<unsigned, NfaTransition*>> routes; // (target index, passed edge)
+			vector<string_view> captures;
 		};
 
 		// things with larger index are prior
-		void ExpandRoutes(NfaSimulationContext& output, const NfaState* state, int index, const string_view view) const
+		void ExpandRoutes(SimulationContext& ctx, const NfaState* state, size_t index, const string_view view) const
 		{
-			assert(index >= 0 && index <= view.length());
+			assert(index <= view.length());
 
+			auto&[routes, captures] = ctx;
 			for (auto it = state->exits.rbegin(); it != state->exits.rend(); ++it)
 			{
 				const auto edge = *it;
@@ -152,7 +146,7 @@ namespace yui
 				case TransitionType::Entity:
 					if (index < view.length() && get<CharRange>(edge->data).Contain(view[index]))
 					{
-						output.emplace_back(index+1, edge);
+						routes.emplace_back(index+1, edge);
 					}
 					break;
 
@@ -162,25 +156,41 @@ namespace yui
 					{
 						if (index == 0 || view[index - 1] == '\n')
 						{
-							output.emplace_back(index, edge);
+							routes.emplace_back(index, edge);
 						}
 					}
 					else // then AnchorType::LineBreak
 					{
 						if (index == view.length() || view[index] == '\n')
 						{
-							output.emplace_back(index, edge);
+							routes.emplace_back(index, edge);
 						}
 					}
 					break;
 
-					// Capture and Finish transitions always pass
-				case TransitionType::Capture:
-				case TransitionType::FinishCapture:
-					output.emplace_back(index, edge);
+					// BeginCapture and EndCapture transitions always pass
+				case TransitionType::BeginCapture:
+				case TransitionType::EndCapture:
+					routes.emplace_back(index, edge);
 					break;
 
+					// Reference transitions may consume multiple characters
+					// NOTE it cannot refer to empty string
 				case TransitionType::Reference:
+				{
+					auto id = get<unsigned>(edge->data);
+					if (captures.size() > id || !captures[id].empty())
+					{
+						auto expected_str = captures[id];
+						auto test_str = view.substr(index, expected_str.length());
+						if (expected_str == test_str)
+						{
+							routes.emplace_back(index + expected_str.length(), edge);
+						}
+					}
+				}
+				break;
+
 				case TransitionType::Assertion:
 					throw 0; // not implemented
 
@@ -194,21 +204,21 @@ namespace yui
 
         RegexMatchOpt SerachInternal(string_view view, bool allow_substr) const override
         {
-			assert(!view.empty());
-
 			// TODO: add minimum-length optimization
-			for (auto index = 0; index < view.length(); ++index)
+			// TODO: add Assertion support
+			for (size_t index = 0; index < view.length(); ++index)
 			{
 				bool found = false;
 				auto last_matched_index = index;
-				NfaSimulationContext routes;
-				vector<string_view> captures;
+
+				SimulationContext ctx;
+				auto&[routes, captures] = ctx;
+
 				stack<tuple<int, int, int>> capture_buffer; // (start_pos, thres, id)
 
 				// initialize routes
-				ExpandRoutes(routes, nfa_.IntialState(), index, view);
+				ExpandRoutes(ctx, nfa_.IntialState(), index, view);
 
-				// TODO: add capturing and reference
 				// iterates and backtracks
 				while (!routes.empty())
 				{
@@ -228,17 +238,17 @@ namespace yui
 					}
 
 					// process special transitions
-					if (last_edge->type == TransitionType::Capture)
+					if (last_edge->type == TransitionType::BeginCapture)
 					{
 						auto id = get<unsigned>(last_edge->data);
 						capture_buffer.push(make_tuple(target_index, routes.size(), id));
 					}
-					else if (last_edge->type == TransitionType::FinishCapture)
+					else if (last_edge->type == TransitionType::EndCapture)
 					{
-						// when it managed to get Finish transition
-						// then there is a match for capture group
+						// when it managed to get EndCapture transition, there must be a match
+						// NOTE not to discard the buffer item, 
+						//	    it may be used by other EndCapture transitions
 						auto[start_pos, thres, id] = capture_buffer.top();
-						// capture_buffer.pop(); TODO: is this required?
 
 						if (captures.size() <= id)
 						{
@@ -246,10 +256,6 @@ namespace yui
 						}
 
 						captures[id] = view.substr(start_pos, target_index - start_pos);
-					}
-					else if (last_edge->type == TransitionType::Assertion)
-					{
-						throw 0; // not implemented
 					}
 
 					// record possible match
@@ -260,7 +266,7 @@ namespace yui
 					}
 
 					// lookup possible new routes
-					ExpandRoutes(routes, last_edge->target, target_index, view);
+					ExpandRoutes(ctx, last_edge->target, target_index, view);
 				}
 
 				if (found)
@@ -291,7 +297,7 @@ namespace yui
 
     RegexMatcher::Ptr CreateNfaMatcher(NfaAutomaton nfa)
     {
-        // automata to simulate should have no epsilon edges for the sake of performance
+        // automaton for simulation should have no epsilon edge for the sake of performance
         assert(!nfa.HasEpsilon());
 
         return make_unique<NfaRegexMatcher>(std::move(nfa));

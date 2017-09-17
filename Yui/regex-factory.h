@@ -42,7 +42,7 @@ namespace yui
         //
         RegexExpr* Anchor(AnchorType type);
         RegexExpr* Capture(RegexExpr* expr);
-		//RegexExpr* Reference(unsigned id);
+		RegexExpr* Reference(unsigned id);
 
         // User-defined Construction Function
         // Override this to control the construction process

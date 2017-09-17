@@ -78,4 +78,9 @@ namespace yui
 		// TODO: support multiple captures
 		return arena_.Construct<CaptureExpr>(0, expr);
 	}
+
+	RegexExpr* RegexFactoryBase::Reference(unsigned id)
+	{
+		return arena_.Construct<ReferenceExpr>(id);
+	}
 }

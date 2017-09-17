@@ -21,13 +21,13 @@ namespace yui
 
     enum class TransitionType
     {
-        Epsilon,    // empty transition
-        Entity,     // for char range
-        Anchor,     // builtin zero-width assertion
-        Capture,    // begin capture
-        Reference,  // backreference
-        Assertion,  // begin custom zero-width assertion
-        FinishCapture,     // end mark for Capture and Assertion group
+        Epsilon,			// empty transition
+        Entity,				// for char range
+        Anchor,				// builtin zero-width assertion
+        BeginCapture,		// begin capture
+		EndCapture,			// end mark for Capture group
+		Reference,			// backreference
+		Assertion,			// begin custom zero-width assertion (to-be-implemented)
     };
 
     struct NfaTransition
@@ -49,6 +49,7 @@ namespace yui
             > data;    
     };
 
+	// TODO: remove is_checkpoint, it's not used and deprecated
     struct NfaState
     {
         bool is_final;                              // indicate whether this state is accepting

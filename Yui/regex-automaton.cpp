@@ -51,7 +51,7 @@ namespace yui
     }
     NfaTransition* NfaBuilder::NewCaptureTransition(NfaBranch branch, unsigned id)
     {
-        auto transition = ConstructTransition(branch.begin, branch.end, TransitionType::Capture);
+        auto transition = ConstructTransition(branch.begin, branch.end, TransitionType::BeginCapture);
         transition->data = id;
 
         return transition;
@@ -69,7 +69,7 @@ namespace yui
     }
     NfaTransition* NfaBuilder::NewFinishTransition(NfaBranch branch)
     {
-        return ConstructTransition(branch.begin, branch.end, TransitionType::FinishCapture);
+        return ConstructTransition(branch.begin, branch.end, TransitionType::EndCapture);
     }
 
     NfaTransition* NfaBuilder::CloneTransition(NfaBranch branch, const NfaTransition *transition)
@@ -123,10 +123,10 @@ namespace yui
             switch (type)
             {
             case TransitionType::Anchor:
-            case TransitionType::Capture:
+            case TransitionType::BeginCapture:
             case TransitionType::Reference:
             case TransitionType::Assertion:
-            case TransitionType::FinishCapture:
+            case TransitionType::EndCapture:
                 dfa_compatible_ = false;
                 break;
             }
@@ -321,7 +321,7 @@ namespace yui
                 }
             }
 
-#pragma warning()
+			// TODO: ensure this always work
             // eliminate identical transitions(I don't konw if this always works)
             auto new_end_iter = std::unique(output_buffer.begin(), output_buffer.end());
             output_buffer.erase(new_end_iter, output_buffer.end());
@@ -474,7 +474,7 @@ namespace yui
                     }
                 }
 
-                // empty target_set is invalid, thus discarded
+                // empty target_set is invalid, so discard it
                 if (!target_set.empty())
                 {
                     // calculate dfa id for target_set

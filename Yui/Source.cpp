@@ -10,18 +10,22 @@ class TestRegexFactory : public RegexFactoryBase
 protected:
     RegexExpr* Construct() override
     {
-        return Concat({
-            Plus(
-				Alter({ Range({'a', 'z'}), Range({'A', 'Z'}) })
-            ),
+		return Concat({
+			Anchor(AnchorType::LineStart),
 
 			Capture(
-				Star(
-					Range({'0', '9'})
-				)
+				Alter({Char('$'), Char('|'), Char(':')})
 			),
 
-            String(";"),
+			Plus(
+				Alter({ Range({ 'a', 'z' }), Range({ 'A', 'Z' }) })
+			),
+
+			Star(
+				Range({ '0', '9' })
+			),
+
+			Reference(0),
         });
     }
 };
@@ -73,7 +77,9 @@ int main()
     auto r3 = nfa_matcher->Match("ababa233");
     auto r4 = nfa_matcher->Match("ggababa233");
     auto r5 = nfa_matcher->Search("ggababa233");
-	auto r6 = nfa_matcher->SearchAll("a233;iogjb233iia6bb233");
+	
+	// REGEX: ^([$|:])([a-z]|[A-Z])+[0-9]*\1;
+	auto r6 = nfa_matcher->SearchAll(":a233:iogjb233iia6\n|bb233$\n$as6$\n$agu8;$");
 
     system("pause");
 }

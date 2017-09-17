@@ -120,8 +120,8 @@ namespace yui
         }
         else
         {
-            NfaState *last_begin = nodes[nodes.size() - 2];
-            NfaState *last_end = nodes.back();
+            NfaState* last_begin = nodes[nodes.size() - 2];
+            NfaState* last_end = nodes.back();
 
             builder.NewEpsilonTransition({ last_begin, last_end }, forward_tendency);
             builder.NewEpsilonTransition({ last_end, last_begin }, backward_tendency);

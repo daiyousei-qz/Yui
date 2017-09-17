@@ -78,7 +78,7 @@ namespace yui
                 case TransitionType::Anchor:
                     printf("Anchor(%s)", ToString(std::get<AnchorType>(edge->data)).c_str());
                     break;
-                case TransitionType::Capture:
+                case TransitionType::BeginCapture:
                     printf("Capture(%d)", std::get<unsigned>(edge->data));
                     break;
                 case TransitionType::Reference:
@@ -107,7 +107,7 @@ namespace yui
                         printf("\n");
                     }
                     break;
-                case TransitionType::FinishCapture:
+                case TransitionType::EndCapture:
                     printf("(finish)");
                     break;
                 }
