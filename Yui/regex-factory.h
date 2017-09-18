@@ -25,6 +25,9 @@ namespace yui
         RegexExpr* Char(int ch);
         RegexExpr* String(const char* s);
 
+		RegexExpr* Letter();
+		RegexExpr* Digit();
+
         // Compound Construction
         //
         RegexExpr* Concat(const RegexExprVec& seq);
@@ -38,10 +41,10 @@ namespace yui
         RegexExpr* Star(RegexExpr* expr);
         RegexExpr* Plus(RegexExpr* expr);
 
-        // Fancy Construction
+        // Context-sensitive Extension Construction
         //
         RegexExpr* Anchor(AnchorType type);
-        RegexExpr* Capture(RegexExpr* expr);
+        RegexExpr* Capture(unsigned id, RegexExpr* expr);
 		RegexExpr* Reference(unsigned id);
 
         // User-defined Construction Function

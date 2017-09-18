@@ -38,6 +38,19 @@ namespace yui
         return Concat(vec);
     }
 
+	RegexExpr* RegexFactoryBase::Letter()
+	{
+		return Alter({
+			Range({ 'a', 'z' }),
+			Range({ 'A', 'Z' }),
+		});
+	}
+
+	RegexExpr* RegexFactoryBase::Digit()
+	{
+		return Range({ '0', '9' });
+	}
+
     RegexExpr* RegexFactoryBase::Concat(const RegexExprVec& seq)
     {
         return arena_.Construct<ConcatenationExpr>(seq);
@@ -73,10 +86,11 @@ namespace yui
         return arena_.Construct<AnchorExpr>(type);
     }
 
-	RegexExpr* RegexFactoryBase::Capture(RegexExpr* expr)
+	RegexExpr* RegexFactoryBase::Capture(unsigned id, RegexExpr* expr)
 	{
-		// TODO: support multiple captures
-		return arena_.Construct<CaptureExpr>(0, expr);
+		assert(id < 1000);
+
+		return arena_.Construct<CaptureExpr>(id, expr);
 	}
 
 	RegexExpr* RegexFactoryBase::Reference(unsigned id)

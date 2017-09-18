@@ -20,9 +20,6 @@
     <ClInclude Include="arena.hpp">
       <Filter>External Source</Filter>
     </ClInclude>
-    <ClInclude Include="regex-parser.h">
-      <Filter>Project Headers</Filter>
-    </ClInclude>
     <ClInclude Include="regex-automaton.h">
       <Filter>Project Headers</Filter>
     </ClInclude>
@@ -50,9 +47,6 @@
       <Filter>Project Source</Filter>
     </ClCompile>
     <ClCompile Include="regex-expr.cpp">
-      <Filter>Project Source</Filter>
-    </ClCompile>
-    <ClCompile Include="regex-parser.cpp">
       <Filter>Project Source</Filter>
     </ClCompile>
     <ClCompile Include="regex-factory.cpp">

@@ -43,10 +43,6 @@ namespace yui
 
             // print title
             printf("NfaState %d", source_id);
-            if (source->is_checkpoint)
-            {
-                printf("[checkpoint]");
-            }
             if (source->is_final)
             {
                 printf("(final)");

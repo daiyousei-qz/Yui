@@ -49,11 +49,9 @@ namespace yui
             > data;    
     };
 
-	// TODO: remove is_checkpoint, it's not used and deprecated
     struct NfaState
     {
         bool is_final;                              // indicate whether this state is accepting
-        bool is_checkpoint;                         // indicate whether this state should be backtracked
         std::vector<NfaTransition*> exits;          // where outgoing edges stores
     };
 

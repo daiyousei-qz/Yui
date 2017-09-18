@@ -10,10 +10,12 @@ class TestRegexFactory : public RegexFactoryBase
 protected:
     RegexExpr* Construct() override
     {
+		auto ref_id = 0u;
+
 		return Concat({
 			Anchor(AnchorType::LineStart),
 
-			Capture(
+			Capture(ref_id,
 				Alter({Char('$'), Char('|'), Char(':')})
 			),
 
@@ -25,7 +27,7 @@ protected:
 				Range({ '0', '9' })
 			),
 
-			Reference(0),
+			Reference(ref_id),
         });
     }
 };

@@ -355,10 +355,6 @@ namespace yui
         // second iteration: clone transitions
         for (const NfaState* source : eval.solid_states)
         {
-            std::vector<CharRange> passing_lexemes;
-
-            bool checkpoint_test = false;       // indicator of possible ambiguity
-            size_t counter = 0;                 // count of transitions
             auto mapped_source = state_map[source];
             auto outgoing_edges = eval.outbounds.equal_range(source);
 
@@ -369,44 +365,11 @@ namespace yui
                 // fetch edge
                 const NfaTransition* edge = pair.second;
 
-                // increment counter of total transitions
-                counter += 1;
-
                 // clone transition
                 assert(edge->type != TransitionType::Epsilon);
                 assert(state_map.find(edge->target) != state_map.end());
                 builder.CloneTransition(NfaBranch{ mapped_source, state_map[edge->target] }, edge);
-
-                // test if checkpoint should be set
-                // i.e. look for possible path of backtracking
-                if (!checkpoint_test)
-                {
-                    // NOTE any non-Entity transition could lead to backtracking
-                    if (edge->type != TransitionType::Entity)
-                    {
-                        checkpoint_test = true;
-                    }
-                    else
-                    {
-                        // for Entity transitions, an overlap in range of passing lexemes
-                        // could lead to ambiguity, i.e. backtracking
-                        auto condition = std::get<CharRange>(edge->data);
-                        for (auto rg : passing_lexemes)
-                        {
-                            auto has_overlap = std::max(condition.Min(), rg.Min()) < std::min(condition.Max(), rg.Max());
-                            if (has_overlap)
-                            {
-                                checkpoint_test = true;
-                                break;
-                            }
-                        }
-
-                        passing_lexemes.push_back(condition);
-                    }
-                }
             });
-
-            mapped_source->is_checkpoint = counter > 1 && checkpoint_test;
         }
 
         return builder.Build(state_map[eval.initial_state]);
@@ -420,7 +383,7 @@ namespace yui
         NfaEvaluationResult eval = EvaluateNfa(atm);
         DfaBuilder builder{};
 
-        using NfaStateSet = FlatSet<const NfaState*>; // TODO: use FlatSet instead
+        using NfaStateSet = FlatSet<const NfaState*>;
         std::map<NfaStateSet, DfaState> id_map; // maps a set of NFA states to a DFA state
         std::queue<NfaStateSet> waitlist;
 
@@ -459,14 +422,14 @@ namespace yui
             }
 
             assert(std::all_of(transitions.begin(), transitions.end(),
-                [](const NfaTransition *edge) {return edge->type == TransitionType::Entity; }));
+                [](const NfaTransition *edge) { return edge->type == TransitionType::Entity; }));
 
             // for each possible character
             for (int ch = 0; ch < 128; ++ch)
             {
                 // calculate target dfa state
                 NfaStateSet target_set;
-                for (const NfaTransition *edge : transitions)
+                for (const NfaTransition* edge : transitions)
                 {
                     if (std::get<CharRange>(edge->data).Contain(ch))
                     {
