@@ -13,21 +13,12 @@ protected:
 		auto ref_id = 0u;
 
 		return Concat({
-			Anchor(AnchorType::LineStart),
-
-			Capture(ref_id,
-				Alter({Char('$'), Char('|'), Char(':')})
+			Repeat(
+				Alter({ Range({ 'a', 'c' }) }),
+				Repetition{1}, ClosureStrategy::Reluctant
 			),
 
-			Plus(
-				Alter({ Range({ 'a', 'z' }), Range({ 'A', 'Z' }) })
-			),
-
-			Star(
-				Range({ '0', '9' })
-			),
-
-			Reference(ref_id),
+			Char('b'),
         });
     }
 };
@@ -78,7 +69,7 @@ int main()
     auto r2 = nfa_matcher->Match("aaa2");
     auto r3 = nfa_matcher->Match("ababa233");
     auto r4 = nfa_matcher->Match("ggababa233");
-    auto r5 = nfa_matcher->Search("ggababa233");
+    auto r5 = nfa_matcher->Search("acabbaba233");
 	
 	// REGEX: ^([$|:])([a-z]|[A-Z])+[0-9]*\1;
 	auto r6 = nfa_matcher->SearchAll(":a233:iogjb233iia6\n|bb233$\n$as6$\n$agu8;$");

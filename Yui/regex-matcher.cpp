@@ -226,7 +226,7 @@ namespace yui
 					routes.pop_back();
 
 					// never backtrack to discard a match
-					if (found && target_index < last_matched_index)
+					if (found && target_index <= last_matched_index)
 					{
 						break;
 					}
