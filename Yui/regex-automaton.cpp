@@ -30,54 +30,40 @@ namespace yui
 
     NfaTransition* NfaBuilder::NewEpsilonTransition(NfaBranch branch, EpsilonPriority priority)
     {
-        auto transition = ConstructTransition(branch.begin, branch.end, TransitionType::Epsilon);
-        transition->data = priority;
-
-        return transition;
+        return ConstructTransition(branch, TransitionType::Epsilon, priority);
     }
     NfaTransition* NfaBuilder::NewEntityTransition(NfaBranch branch, CharRange value)
     {
-        auto transition = ConstructTransition(branch.begin, branch.end, TransitionType::Entity);
-        transition->data = value;
-
-        return transition;
+        return ConstructTransition(branch, TransitionType::Entity, value);
     }
     NfaTransition* NfaBuilder::NewAnchorTransition(NfaBranch branch, AnchorType anchor)
     {
-        auto transition = ConstructTransition(branch.begin, branch.end, TransitionType::Anchor);
-        transition->data = anchor;
-
-        return transition;
+        return ConstructTransition(branch, TransitionType::Anchor, anchor);
     }
-    NfaTransition* NfaBuilder::NewCaptureTransition(NfaBranch branch, unsigned id)
+    NfaTransition* NfaBuilder::NewBeginCaptureTransition(NfaBranch branch, unsigned id)
     {
-        auto transition = ConstructTransition(branch.begin, branch.end, TransitionType::BeginCapture);
-        transition->data = id;
-
-        return transition;
+        return ConstructTransition(branch, TransitionType::BeginCapture, id);
     }
+	NfaTransition* NfaBuilder::NewEndCaptureTransition(NfaBranch branch)
+	{
+		return ConstructTransition(branch, TransitionType::EndCapture, {});
+	}
     NfaTransition* NfaBuilder::NewReferenceTransition(NfaBranch branch, unsigned id)
     {
-        auto transition = ConstructTransition(branch.begin, branch.end, TransitionType::Reference);
-        transition->data = id;
-
-        return transition;
+        return ConstructTransition(branch, TransitionType::Reference, id);
     }
-    NfaTransition* NfaBuilder::NewAssertionTransition(NfaBranch branch, AssertionType type)
+    NfaTransition* NfaBuilder::NewBeginAssertionTransition(NfaBranch branch, AssertionType type)
     {
-        return ConstructTransition(branch.begin, branch.end, TransitionType::Assertion);
+        return ConstructTransition(branch, TransitionType::BeginAssertion, type);
     }
-    NfaTransition* NfaBuilder::NewFinishTransition(NfaBranch branch)
-    {
-        return ConstructTransition(branch.begin, branch.end, TransitionType::EndCapture);
-    }
+	NfaTransition* NfaBuilder::NewEndAssertionTransition(NfaBranch branch)
+	{
+		return ConstructTransition(branch, TransitionType::EndAssertion, {});
+	}
 
-    NfaTransition* NfaBuilder::CloneTransition(NfaBranch branch, const NfaTransition *transition)
+    NfaTransition* NfaBuilder::CloneTransition(NfaBranch branch, const NfaTransition* transition)
     {
-        NfaTransition *new_transition = ConstructTransition(branch.begin, branch.end, transition->type);
-        new_transition->data = transition->data;
-
-        return new_transition;
+        return ConstructTransition(branch, transition->type, transition->data);
     }
 
     void NfaBuilder::CloneBranch(NfaBranch target, NfaBranch source)
@@ -116,19 +102,21 @@ namespace yui
         }
     }
 
-    NfaTransition* NfaBuilder::ConstructTransition(NfaState *source, NfaState *target, TransitionType type)
+    NfaTransition* NfaBuilder::ConstructTransition(NfaBranch branch, TransitionType type, TransitionDataType data)
     {
         if (dfa_compatible_)
         {
             switch (type)
             {
-            case TransitionType::Anchor:
-            case TransitionType::BeginCapture:
-            case TransitionType::Reference:
-            case TransitionType::Assertion:
-            case TransitionType::EndCapture:
-                dfa_compatible_ = false;
-                break;
+			case TransitionType::Entity:
+				break;
+			case TransitionType::Epsilon:
+				if (get<EpsilonPriority>(data) == EpsilonPriority::Normal)
+					break;
+
+			default:
+				dfa_compatible_ = false;
+				break;
             }
         }
 
@@ -139,12 +127,12 @@ namespace yui
 
         // create a new transition
         auto result = arena_.Construct<NfaTransition>();
-        result->source = source;
-        result->target = target;
+        result->source = branch.begin;
+        result->target = branch.end;
         result->type = type;
 
         // add it to source state
-        source->exits.push_back(result);
+        branch.begin->exits.push_back(result);
 
         return result;
     }
@@ -296,7 +284,8 @@ namespace yui
                             result.accepting_states.insert(source);
                         }
 
-                        // expand the epsilon transition for the first time only
+                        // TODO: is expanded required? would there possibly be epsilon-only cycle?
+						// expand the epsilon transition for the first time only
                         if (expanded.find(edge) == expanded.end())
                         {
                             has_expansion = true;
@@ -393,6 +382,7 @@ namespace yui
             return eval.accepting_states.find(state) != eval.accepting_states.end();
         };
 
+		// TODO: should empty string be allowed to be a match?
         // process initial state
         // initial state cannot be accepting as regex cannot match empty string
         assert(!TestAccepting(eval.initial_state));
@@ -405,11 +395,11 @@ namespace yui
         while (!waitlist.empty())
         {
             // fetch source set from the queue
-            NfaStateSet source_set = std::move(waitlist.front());
+            auto source_set = std::move(waitlist.front());
             waitlist.pop();
 
             // lookup source id
-            DfaState source_id = id_map[source_set];
+            auto source_id = id_map[source_set];
 
             // make a copy of all outgoing transitions
             std::vector<const NfaTransition*> transitions;
@@ -418,13 +408,9 @@ namespace yui
                 auto range = eval.outbounds.equal_range(state);
                 std::transform(range.first, range.second, std::back_inserter(transitions),
                     [](auto iter) { return iter.second; });
-#pragma warning()
             }
 
-            assert(std::all_of(transitions.begin(), transitions.end(),
-                [](const NfaTransition *edge) { return edge->type == TransitionType::Entity; }));
-
-            // for each possible character
+            // for each possible character in alphabet
             for (int ch = 0; ch < 128; ++ch)
             {
                 // calculate target dfa state

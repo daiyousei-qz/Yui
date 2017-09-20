@@ -12,14 +12,11 @@ protected:
     {
 		auto ref_id = 0u;
 
-		return Concat({
-			Repeat(
-				Alter({ Range({ 'a', 'c' }) }),
-				Repetition{1}, ClosureStrategy::Reluctant
-			),
-
-			Char('b'),
-        });
+		return Plus(
+			Alter({
+				String("ab"), String("aa"),
+			})
+		);
     }
 };
 

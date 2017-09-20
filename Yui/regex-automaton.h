@@ -25,10 +25,21 @@ namespace yui
         Entity,				// for char range
         Anchor,				// builtin zero-width assertion
         BeginCapture,		// begin capture
-		EndCapture,			// end mark for Capture group
+		EndCapture,			// 
 		Reference,			// backreference
-		Assertion,			// begin custom zero-width assertion (to-be-implemented)
+		BeginAssertion,		// begin custom zero-width assertion (to-be-implemented)
+		EndAssertion,		// 
     };
+
+	using TransitionDataType = 
+		std::variant<
+			std::monostate,         // default empty choice
+			EpsilonPriority,        // valid only when type is Epsilon
+			AnchorType,             // valid only when type is Anchor
+			CharRange,              // valid only when type is Entity
+			unsigned,               // valid only when type is Capture or Reference
+			AssertionType           // valid only when type is Assertion
+		>;
 
     struct NfaTransition
     {
@@ -37,16 +48,9 @@ namespace yui
 
         const NfaState* source;
         const NfaState* target;
-        TransitionType type;
 
-        std::variant<
-            std::monostate,         // default empty choice
-            EpsilonPriority,        // valid only when type is Epsilon
-            AnchorType,             // valid only when type is Anchor
-            CharRange,              // valid only when type is Entity
-            unsigned,               // valid only when type is Capture or Reference
-            AssertionType           // valid only when type is Assertion
-            > data;    
+        TransitionType type;
+		TransitionDataType data;
     };
 
     struct NfaState
@@ -121,10 +125,11 @@ namespace yui
         NfaTransition* NewEpsilonTransition(NfaBranch branch, EpsilonPriority priority);
         NfaTransition* NewEntityTransition(NfaBranch branch, CharRange value);
         NfaTransition* NewAnchorTransition(NfaBranch branch, AnchorType anchor);
-        NfaTransition* NewCaptureTransition(NfaBranch branch, unsigned id);
-        NfaTransition* NewReferenceTransition(NfaBranch branch, unsigned id);
-        NfaTransition* NewAssertionTransition(NfaBranch branch, AssertionType type);
-        NfaTransition* NewFinishTransition(NfaBranch branch);
+        NfaTransition* NewBeginCaptureTransition(NfaBranch branch, unsigned id);
+		NfaTransition* NewEndCaptureTransition(NfaBranch branch);
+		NfaTransition* NewReferenceTransition(NfaBranch branch, unsigned id);
+        NfaTransition* NewBeginAssertionTransition(NfaBranch branch, AssertionType type);
+		NfaTransition* NewEndAssertionTransition(NfaBranch branch);
 
         // construct the same transition between source and target
         NfaTransition* CloneTransition(NfaBranch branch, const NfaTransition *transition);
@@ -145,7 +150,7 @@ namespace yui
 
         // constructs a transition edge from the source state to the target with its type specified
         // NOTE that its data field is left empty
-        NfaTransition* ConstructTransition(NfaState *source, NfaState *target, TransitionType type);
+        NfaTransition* ConstructTransition(NfaBranch branch, TransitionType type, TransitionDataType data);
 
     private:
         bool has_epsilon_;

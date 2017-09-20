@@ -80,24 +80,16 @@ namespace yui
                 case TransitionType::Reference:
                     printf("Reference(%d)", std::get<unsigned>(edge->data));
                     break;
-                case TransitionType::Assertion:
-                    printf("Assertion");
+                case TransitionType::BeginAssertion:
                     {
-                        switch (std::get<AssertionType>(edge->data))
+						printf("Assertion");
+						switch (std::get<AssertionType>(edge->data))
                         {
-                        case AssertionType::PositiveLookAhead:
+                        case AssertionType::Positive:
                             printf("(PositiveLookAhead)");
                             break;
-                        case AssertionType::NegativeLookAhead:
+                        case AssertionType::Negative:
                             printf("(NegativeLookAhead)");
-                            break;
-                        case AssertionType::PositiveLookBehind:
-                            printf("(PositiveLookBehid)");
-                            break;
-                        case AssertionType::NegativeLookBehind:
-                            printf("(NegativeLookBehind)");
-                            break;
-                        default:
                             break;
                         }
                         printf("\n");

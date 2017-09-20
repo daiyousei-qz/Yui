@@ -120,10 +120,6 @@ namespace yui
 
     private:
 
-		// (target index, passed transition) pairs
-		// ones that have largest index are similated first
-		using NfaSimulationContext = deque<pair<int, NfaTransition*>>;
-
 		struct SimulationContext
 		{
 			deque<pair<unsigned, NfaTransition*>> routes; // (target index, passed edge)
@@ -168,9 +164,11 @@ namespace yui
 					}
 					break;
 
-					// BeginCapture and EndCapture transitions always pass
+					// the following transitions always pass
 				case TransitionType::BeginCapture:
 				case TransitionType::EndCapture:
+				case TransitionType::BeginAssertion:
+				case TransitionType::EndAssertion:
 					routes.emplace_back(index, edge);
 					break;
 
@@ -191,9 +189,6 @@ namespace yui
 				}
 				break;
 
-				case TransitionType::Assertion:
-					throw 0; // not implemented
-
 				case TransitionType::Epsilon:
 					throw 0; // not suppose to happen
 				}
@@ -206,9 +201,11 @@ namespace yui
         {
 			// TODO: add minimum-length optimization
 			// TODO: add Assertion support
+			// TODO: discards captured contents when backtracking <- support multiple capture?
 			for (size_t index = 0; index < view.length(); ++index)
 			{
 				bool found = false;
+				auto last_matched_depth = 0;
 				auto last_matched_index = index;
 
 				SimulationContext ctx;
@@ -219,31 +216,37 @@ namespace yui
 				// initialize routes
 				ExpandRoutes(ctx, nfa_.IntialState(), index, view);
 
-				// iterates and backtracks
+				// iterate and backtrack for the first match
 				while (!routes.empty())
 				{
-					auto [target_index, last_edge] = routes.back();
+					auto[target_index, last_edge] = routes.back();
 					routes.pop_back();
 
+					const auto current_depth = routes.size();
+
 					// never backtrack to discard a match
-					if (found && target_index <= last_matched_index)
+					if (found && current_depth < last_matched_depth)
 					{
 						break;
 					}
 
 					// remove capture buffer if no longer valid on backtracking
-					while (!capture_buffer.empty() && get<1>(capture_buffer.top()) > routes.size())
+					while (!capture_buffer.empty() 
+						&& current_depth < get<1>(capture_buffer.top()))
 					{
 						capture_buffer.pop();
 					}
 
 					// process special transitions
-					if (last_edge->type == TransitionType::BeginCapture)
+					switch (last_edge->type)
+					{
+					case TransitionType::BeginCapture:
 					{
 						auto id = get<unsigned>(last_edge->data);
-						capture_buffer.push(make_tuple(target_index, routes.size(), id));
+						capture_buffer.push(make_tuple(target_index, current_depth, id));
 					}
-					else if (last_edge->type == TransitionType::EndCapture)
+						break;
+					case TransitionType::EndCapture:
 					{
 						// when it managed to get EndCapture transition, there must be a match
 						// NOTE not to discard the buffer item, 
@@ -257,11 +260,19 @@ namespace yui
 
 						captures[id] = view.substr(start_pos, target_index - start_pos);
 					}
+						break;
+
+					case TransitionType::BeginAssertion:
+					case TransitionType::EndAssertion:
+						throw 0;
+						break;
+					}
 
 					// record possible match
 					if (last_edge->target->is_final)
 					{
 						found = true;
+						last_matched_depth = current_depth;
 						last_matched_index = target_index;
 					}
 

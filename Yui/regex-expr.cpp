@@ -141,8 +141,8 @@ namespace yui
         auto inner_branch = builder.NewBranch(false);
         expr_->ConnectNfa(builder, inner_branch);
 
-        builder.NewCaptureTransition(NfaBranch{ which.begin, inner_branch.begin }, id_);
-        builder.NewFinishTransition(NfaBranch{ inner_branch.end, which.end });
+        builder.NewBeginCaptureTransition(NfaBranch{ which.begin, inner_branch.begin }, id_);
+        builder.NewEndCaptureTransition(NfaBranch{ inner_branch.end, which.end });
     }
 
     void ReferenceExpr::ConnectNfa(NfaBuilder& builder, NfaBranch which)

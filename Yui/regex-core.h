@@ -19,12 +19,11 @@ namespace yui
         LineBreak,
     };
 
+	// Assertion always looks ahead
     enum class AssertionType
     {
-        PositiveLookAhead,
-        NegativeLookAhead,
-        PositiveLookBehind,
-        NegativeLookBehind
+        Positive,
+        Negative,
     };
 
     enum class ClosureStrategy
