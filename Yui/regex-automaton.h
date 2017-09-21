@@ -66,17 +66,21 @@ namespace yui
     };
 
     // This class should only be constructed via a NfaBuilder
-    class NfaAutomaton
+    class NfaAutomaton : Uncopyable, Unmovable
     {
-    private:
-        friend class NfaBuilder;
-        NfaAutomaton(Arena arena, NfaState* begin, bool has_epsilon, bool dfa_compatible)
+	private:
+		friend class NfaBuilder;
+		struct ConstructionDummy { };
+
+	public:
+		using Ptr = std::unique_ptr<NfaAutomaton>;
+
+		NfaAutomaton(Arena arena, NfaState* begin, bool has_epsilon, bool dfa_compatible, ConstructionDummy = {})
             : arena_(std::move(arena))
             , initial_state_(begin)
             , has_epsilon_(has_epsilon)
             , dfa_compatible_(dfa_compatible) { }
-    
-    public:
+
         bool DfaCompatible() const
         {
             return dfa_compatible_;
@@ -106,12 +110,11 @@ namespace yui
         NfaBuilder()
         {
             has_epsilon_ = false;
-            // assume it compatible with DFA at first
             dfa_compatible_ = true;
         }
 
-        // Creates States
-        //
+		// a workaround to manually disable DFA
+		void DisableDfa() { dfa_compatible_ = false; }
 
         // allocates a new state
         NfaState* NewState(bool is_final = false);
@@ -119,8 +122,6 @@ namespace yui
         // allocates an independent states pair
         NfaBranch NewBranch(bool is_final = false);
 
-        // Creates Transitions
-        //
 
         NfaTransition* NewEpsilonTransition(NfaBranch branch, EpsilonPriority priority);
         NfaTransition* NewEntityTransition(NfaBranch branch, CharRange value);
@@ -138,13 +139,7 @@ namespace yui
         // this function may introduce several new NfaState
         void CloneBranch(NfaBranch target, NfaBranch source);
 
-        // Build
-        //
-
-        NfaAutomaton Build(NfaState* start)
-        {
-            return NfaAutomaton{ std::move(arena_), start, has_epsilon_, dfa_compatible_ };
-        }
+		NfaAutomaton::Ptr Build(NfaState* start);
 
     private:
 
@@ -170,34 +165,36 @@ namespace yui
 
     // TODO: refine constant definition here
     static constexpr auto kInvalidDfaState = std::numeric_limits<DfaState>::max();
-    static constexpr auto kDfaJumptableWidth = 129;
-    static constexpr auto kAcceptingIndicatorOffset = 128;
+    static constexpr auto kDfaJumptableWidth = 128u;
 
-    // Jumptable of a DfaAutomaton should be a n*129 table
-    // NOTE last column of the table denotes if a state is accepting(when it unequals kInvalidDfaState)
-    class DfaAutomaton
+    // Jumptable of a DfaAutomaton should be a n*128 table
+    class DfaAutomaton : Uncopyable, Unmovable
     {
-    private:
-        friend class DfaBuilder;
-        DfaAutomaton(DfaState initial, const DfaStateVec& jumptable)
-            : initial_(initial)
-            , jumptable_(jumptable) 
-        {
-            assert(jumptable.size() % kDfaJumptableWidth == 0);
-        }
+	private:
+		friend class DfaBuilder;
+		struct ConstructionDummy{ };
 
-    public:
-        size_t StateCount() const { return jumptable_.size() / kDfaJumptableWidth; }
+	public:
+		using Ptr = std::unique_ptr<DfaAutomaton>;
+
+		DfaAutomaton(const std::vector<int> acc, const DfaStateVec& jumptable, ConstructionDummy = {})
+			: acceptance_lookup_(acc)
+			, jumptable_(jumptable) { }
+
+        size_t StateCount() const 
+		{
+			return jumptable_.size() / kDfaJumptableWidth;
+		}
 
         bool IsAccepting(DfaState state) const 
         {
             return state != kInvalidDfaState
-                && jumptable_[state * kDfaJumptableWidth + kAcceptingIndicatorOffset] != kInvalidDfaState;
+                && acceptance_lookup_[state] != -1;
         }
 
         int InitialState() const 
         {
-            return initial_;
+            return 0;
         }
 
         int Transit(DfaState src, int ch) const
@@ -209,10 +206,8 @@ namespace yui
         }
 
     private:
-        // TODO: replace this with a constant 0?
-        DfaState initial_;
-
-        DfaStateVec jumptable_;
+		std::vector<int> acceptance_lookup_; // non-minis-one if accepting
+		DfaStateVec jumptable_;
     };
 
     class DfaBuilder : Uncopyable, Unmovable
@@ -221,10 +216,12 @@ namespace yui
         DfaState NewState(bool accepting);
         void NewTransition(DfaState src, DfaState target, int ch);
 
-        DfaAutomaton Build();
+        DfaAutomaton::Ptr Build();
 
     private:
         DfaState next_state_ = 0;
+
+		std::vector<int> acceptance_lookup_;
         DfaStateVec jumptable_;
     };
 
@@ -246,6 +243,6 @@ namespace yui
     void EnumerateNfa(const NfaState* initial, std::function<void(const NfaState*)> callback);
     NfaEvaluationResult EvaluateNfa(const NfaAutomaton& atm);
 
-    NfaAutomaton EliminateEpsilon(const NfaAutomaton &atm);
-    DfaAutomaton GenerateDfa(const NfaAutomaton &atm);
+    NfaAutomaton::Ptr EliminateEpsilon(const NfaAutomaton &atm);
+    DfaAutomaton::Ptr GenerateDfa(const NfaAutomaton &atm);
 }

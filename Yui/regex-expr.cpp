@@ -66,69 +66,68 @@ namespace yui
 	// TODO: optimize for [1, ...]
     void RepetitionExpr::ConnectNfa(NfaBuilder& builder, NfaBranch which)
     {
+		Repetition rep = Count();
+
         // evaluate child expression of repetition
         NfaBranch child_branch = builder.NewBranch();
         Child()->ConnectNfa(builder, child_branch);
-
-        // declarations
-        Repetition rep = Count();
 
         std::vector<NfaState*> nodes;
         nodes.push_back(child_branch.begin);
         nodes.push_back(child_branch.end);
 
         // repeat child for particular times by cloning the branch
-        for (size_t i = 1; i < rep.Max(); ++i)
+		// [m, inf] repetition requires m branches
+		// [m, n] requires n branches
+		// NOTE one branch is pre-installed
+		size_t ins_count = rep.GoInfinity() ? rep.Min() : rep.Max();
+        for (auto i = 1u; i < ins_count; ++i)
         {
-            // NOTE here we assume rep.Max() >= rep.Min()
+			NfaState *new_begin = nodes.back();
+			NfaState *new_end = builder.NewState();
+			builder.CloneBranch({ new_begin, new_end }, child_branch);
 
-            if (i <= rep.Min() || !rep.GoInfinity())
-            {
-                NfaState *new_begin = nodes.back();
-                NfaState *new_end = builder.NewState();
-                builder.CloneBranch({new_begin, new_end}, child_branch);
-
-                nodes.push_back(new_end);
-            }
-            else // rep.GoInfinity()
-            {
-                break;
-            }
+			nodes.push_back(new_end);
         }
 
         // calculate epsilon priority of edges for leaving or restarting
         // Greedy closures tend to stay at internal state, while Reluctant closures behave oppositely
-        // forward_tendency is on epsilon transitions that tend to leave...
-        EpsilonPriority forward_tendency, backward_tendency;
+        EpsilonPriority leaving_tendency, staying_tendency;
         if (Strategy() == ClosureStrategy::Greedy)
         {
-            forward_tendency = EpsilonPriority::Low;
-            backward_tendency = EpsilonPriority::High;
+            leaving_tendency = EpsilonPriority::Low;
+            staying_tendency = EpsilonPriority::High;
         }
         else // closure.strategy == ClosureStrategy::Reluctant
         {
-            forward_tendency = EpsilonPriority::High;
-            backward_tendency = EpsilonPriority::Low;
+            leaving_tendency = EpsilonPriority::High;
+            staying_tendency = EpsilonPriority::Low;
         }
 
-        if (!rep.GoInfinity())
+        if (rep.GoInfinity())
         {
-            for (size_t i = rep.Min(); i < rep.Max(); ++i)
-            {
-                builder.NewEpsilonTransition({ nodes[i], nodes.back() }, forward_tendency);
-            }
+			NfaState* last_begin = nodes[nodes.size() - 2];
+			NfaState* last_end = nodes.back();
+
+			// remove leaving transition if at least one repetition is needed
+			// doing this saves a branch
+			if (rep.Min() == 0)
+			{
+				builder.NewEpsilonTransition({ last_begin, last_end }, leaving_tendency);
+			}
+
+			builder.NewEpsilonTransition({ last_end, last_begin }, staying_tendency);
         }
         else
         {
-            NfaState* last_begin = nodes[nodes.size() - 2];
-            NfaState* last_end = nodes.back();
-
-            builder.NewEpsilonTransition({ last_begin, last_end }, forward_tendency);
-            builder.NewEpsilonTransition({ last_end, last_begin }, backward_tendency);
+			for (size_t i = rep.Min(); i < rep.Max(); ++i)
+			{
+				builder.NewEpsilonTransition({ nodes[i], nodes.back() }, leaving_tendency);
+			}
         }
 
         builder.NewEpsilonTransition({ which.begin, nodes.front() }, EpsilonPriority::Normal);
-        builder.NewEpsilonTransition({ nodes.back(), which.end }, forward_tendency);
+        builder.NewEpsilonTransition({ nodes.back(), which.end }, leaving_tendency);
     }
     
     void AnchorExpr::ConnectNfa(NfaBuilder& builder, NfaBranch which)

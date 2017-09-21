@@ -109,10 +109,8 @@ namespace yui
             switch (type)
             {
 			case TransitionType::Entity:
-				break;
 			case TransitionType::Epsilon:
-				if (get<EpsilonPriority>(data) == EpsilonPriority::Normal)
-					break;
+				break;
 
 			default:
 				dfa_compatible_ = false;
@@ -130,6 +128,7 @@ namespace yui
         result->source = branch.begin;
         result->target = branch.end;
         result->type = type;
+		result->data = data;
 
         // add it to source state
         branch.begin->exits.push_back(result);
@@ -137,17 +136,23 @@ namespace yui
         return result;
     }
 
+	NfaAutomaton::Ptr NfaBuilder::Build(NfaState* start)
+	{
+		return make_unique<NfaAutomaton>(std::move(arena_), start, has_epsilon_, dfa_compatible_);
+	}
+
     // Implementation of DfaBuilder
     //
     DfaState DfaBuilder::NewState(bool accepting)
     {
+		acceptance_lookup_.push_back(-1);
         jumptable_.resize(jumptable_.size() + kDfaJumptableWidth, kInvalidDfaState);
         int id = next_state_++;
 
         if (accepting)
         {
             // TODO: name the magic number 0
-            jumptable_[id * kDfaJumptableWidth + kAcceptingIndicatorOffset] = 0;
+            acceptance_lookup_[id] = 0;
         }
 
         return id;
@@ -161,9 +166,9 @@ namespace yui
         jumptable_[src * kDfaJumptableWidth + ch] = target;
     }
 
-    DfaAutomaton DfaBuilder::Build()
+    DfaAutomaton::Ptr DfaBuilder::Build()
     {
-        return DfaAutomaton(0, jumptable_);
+        return make_unique<DfaAutomaton>(acceptance_lookup_, jumptable_);
     }
 
     // Algorithms
@@ -326,7 +331,7 @@ namespace yui
     }
 
     // generates a Nfa with epsilon eliminated
-    NfaAutomaton EliminateEpsilon(const NfaAutomaton &atm)
+    NfaAutomaton::Ptr EliminateEpsilon(const NfaAutomaton &atm)
     {
         NfaEvaluationResult eval = EvaluateNfa(atm);
         NfaBuilder builder;
@@ -365,7 +370,7 @@ namespace yui
     }
 
     // generates a DFA from a NFA
-    DfaAutomaton GenerateDfa(const NfaAutomaton &atm)
+    DfaAutomaton::Ptr GenerateDfa(const NfaAutomaton &atm)
     {
         assert(atm.DfaCompatible());
 

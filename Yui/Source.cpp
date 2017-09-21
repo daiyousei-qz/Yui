@@ -38,20 +38,20 @@ int main()
     regex->Expr()->ConnectNfa(nfa_builder, branch);
 
     auto nfa_e = nfa_builder.Build(branch.begin);
-    PrintNfa(nfa_e);
+    PrintNfa(*nfa_e);
     printf("\n\n");
 
     printf("==== Epsilon Elimination ===========================\n");
-    auto nfa = EliminateEpsilon(nfa_e);
-    PrintNfa(nfa);
+    auto nfa = EliminateEpsilon(*nfa_e);
+    PrintNfa(*nfa);
 
 	printf("\n\n");
 
     printf("==== DFA Construction ===========================\n");
-	if (nfa_e.DfaCompatible())
+	if (nfa_e->DfaCompatible())
 	{
-		auto dfa = GenerateDfa(nfa_e);
-		PrintDfa(dfa);
+		auto dfa = GenerateDfa(*nfa_e);
+		PrintDfa(*dfa);
 	}
 	else
 	{

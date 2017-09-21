@@ -36,6 +36,6 @@ namespace yui
         virtual RegexMatchOpt SerachInternal(std::string_view view, bool allow_substr) const = 0;
     };
 
-    RegexMatcher::Ptr CreateDfaMatcher(DfaAutomaton dfa);
-    RegexMatcher::Ptr CreateNfaMatcher(NfaAutomaton nfa);
+    RegexMatcher::Ptr CreateDfaMatcher(DfaAutomaton::Ptr dfa);
+    RegexMatcher::Ptr CreateNfaMatcher(NfaAutomaton::Ptr nfa);
 }

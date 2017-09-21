@@ -61,7 +61,7 @@ namespace yui
     class DfaRegexMatcher : public RegexMatcher
     {
     public:
-        DfaRegexMatcher(DfaAutomaton atm)
+        DfaRegexMatcher(DfaAutomaton::Ptr atm)
             : dfa_(std::move(atm)) { }
 
     protected:
@@ -71,15 +71,15 @@ namespace yui
             {
                 auto found = false;
                 auto last_matched_it = start_it;
-                auto state = dfa_.InitialState();
+                auto state = dfa_->InitialState();
 
                 for (auto it = start_it; it != view.end(); ++it)
                 {
-                    state = dfa_.Transit(state, *it);
+                    state = dfa_->Transit(state, *it);
                     if (state != kInvalidDfaState)
                     {
                         // record the current position if it's accepting
-                        if (dfa_.IsAccepting(state))
+                        if (dfa_->IsAccepting(state))
                         {
                             found = true;
                             last_matched_it = it;
@@ -107,7 +107,7 @@ namespace yui
         }
 
     private:
-        DfaAutomaton dfa_;
+        DfaAutomaton::Ptr dfa_;
     };
 
     // NfaRegexMatcher
@@ -115,7 +115,7 @@ namespace yui
     class NfaRegexMatcher : public RegexMatcher
     {
     public:
-        NfaRegexMatcher(NfaAutomaton atm)
+        NfaRegexMatcher(NfaAutomaton::Ptr atm)
             : nfa_(std::move(atm)) { }
 
     private:
@@ -205,16 +205,16 @@ namespace yui
 			for (size_t index = 0; index < view.length(); ++index)
 			{
 				bool found = false;
-				auto last_matched_depth = 0;
+				auto last_matched_depth = 0u;
 				auto last_matched_index = index;
 
 				SimulationContext ctx;
 				auto&[routes, captures] = ctx;
 
-				stack<tuple<int, int, int>> capture_buffer; // (start_pos, thres, id)
+				stack<tuple<size_t, size_t, unsigned>> capture_buffer; // (start_pos, thres_depth, id)
 
 				// initialize routes
-				ExpandRoutes(ctx, nfa_.IntialState(), index, view);
+				ExpandRoutes(ctx, nfa_->IntialState(), index, view);
 
 				// iterate and backtrack for the first match
 				while (!routes.empty())
@@ -251,7 +251,7 @@ namespace yui
 						// when it managed to get EndCapture transition, there must be a match
 						// NOTE not to discard the buffer item, 
 						//	    it may be used by other EndCapture transitions
-						auto[start_pos, thres, id] = capture_buffer.top();
+						auto[start_pos, thres_depth, id] = capture_buffer.top();
 
 						if (captures.size() <= id)
 						{
@@ -295,21 +295,21 @@ namespace yui
 		}
 
     private:
-        NfaAutomaton nfa_;
+        NfaAutomaton::Ptr nfa_;
     };
 
     // Matcher Factory
     //
 
-    RegexMatcher::Ptr CreateDfaMatcher(DfaAutomaton dfa)
+    RegexMatcher::Ptr CreateDfaMatcher(DfaAutomaton::Ptr dfa)
     {
         return make_unique<DfaRegexMatcher>(std::move(dfa));
     }
 
-    RegexMatcher::Ptr CreateNfaMatcher(NfaAutomaton nfa)
+    RegexMatcher::Ptr CreateNfaMatcher(NfaAutomaton::Ptr nfa)
     {
         // automaton for simulation should have no epsilon edge for the sake of performance
-        assert(!nfa.HasEpsilon());
+        assert(!nfa->HasEpsilon());
 
         return make_unique<NfaRegexMatcher>(std::move(nfa));
     }
