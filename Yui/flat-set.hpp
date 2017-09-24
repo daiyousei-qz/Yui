@@ -211,6 +211,9 @@ namespace yui
         {
             container_.insert(container_.end(), first, last);
             std::sort(container_.begin(), container_.end(), key_comp());
+
+			auto correct_end = std::unique(container_.begin(), container_.end());
+			container_.erase(correct_end, container_.end());
         }
         void insert(std::initializer_list<value_type> ilist)
         {
